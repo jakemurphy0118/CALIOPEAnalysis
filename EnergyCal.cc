@@ -18,11 +18,47 @@ EnergyCal::~EnergyCal(){};
 std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
 
 	MakeBarHistos(t,f);
-		
+
+	std::vector<double> *scalingFactors = 0;
+//for peak finding (TSpectrum)
+	Int_t npeaks = 3;
+	float sigma = 5;
+	float threshold = 0.05;
+/*	double PeakEnergies[npeaks];
+//assigned in increasing order of energy
+	PeakEnergies[0] = 511;	//annihilation
+	PeakEnergies[1] = 1022; //double
+	PeakEnergies[2] = 1274; //gamma?
+*/	
+
+
+
+	int i;
+	int j;
+
+	for (i=0;i<fNumBars;i++)
+	{	
+		std::stringstream ss;
+		ss << i+1;
+		std::string bar = ss.str();
+		std::string histObj = "qdcBar";
+		histObj = histObj + bar;
+		const char *Obj = histObj.c_str();
+		f->GetObject(Obj,fHistPtr);
+
+		TSpectrum *spectrum = new TSpectrum(npeaks);
+		Int_t nfound = spectrum->Search(fHistPtr,sigma,"",threshold);
+		Float_t *xpeaks = spectrum->GetPositionX();
+
+		for (j=0;j<nfound;j++)
+		{
+			std::cout << "xposition: " << xpeaks[j] << " found for bar " << bar << std::endl;			
+		}
+	}
 	
 
 
-	return vec;
+	return scalingFactors;
 }
 
 void EnergyCal::MakeBarHistos(TTree* t,TFile *f){
