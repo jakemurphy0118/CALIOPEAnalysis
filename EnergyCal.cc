@@ -53,7 +53,7 @@ void EnergyCal::Calibrate(TTree* t, TFile* f){
 	}
 */	
 //finds peaks for all qdc data combined
-//use findpeak.cc in CALIOPEAnalysis/RunFiles/ to test for correct parameters, etc 
+//use findpeak.cc in CALIOPEAnalysis/RunFiles/ to test for correct arguments for Search, etc 
 
 	f->GetObject("qdcALL",fHistPtr);
 	TSpectrum *spectrum = new TSpectrum(10);
