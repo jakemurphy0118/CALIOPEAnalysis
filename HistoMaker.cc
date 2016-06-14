@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 
 HistoMaker::HistoMaker(){
@@ -14,14 +15,35 @@ HistoMaker::HistoMaker(){
 	fTDCmax = 500;
 	fTDCmin = 0;
 	fNumZPosbins = 100;
-	fZPosmax = 200;
-	fZPosmin = 0;
+	fZPosmax = 3;
+	fZPosmin = -3;
 	histObj = "";
 	histTitle = "";
 }
 
 
 HistoMaker::~HistoMaker(){}
+
+void HistoMaker::SetInvAttCoeff(){
+
+	InvAttCoeff[0] = 1;
+	InvAttCoeff[1] = 1;
+	InvAttCoeff[2] = 1;
+	InvAttCoeff[3] = 1;
+	InvAttCoeff[4] = 1;
+	InvAttCoeff[5] = 1;
+	InvAttCoeff[6] = 1;
+	InvAttCoeff[7] = 1;
+	InvAttCoeff[8] = 1;
+	InvAttCoeff[9] = 1;
+	InvAttCoeff[10] = 1;
+	InvAttCoeff[11] = 1;
+	InvAttCoeff[12] = 1;
+	InvAttCoeff[13] = 1;
+	InvAttCoeff[14] = 1;
+	InvAttCoeff[15] = 1;
+
+}
 
 
 void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
@@ -57,6 +79,7 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 	long numEntries = tQDC->GetEntries();
 	
 	TH1D *qdcALL = new TH1D("qdcALL","QDC All Bars",fNumQDCbins,fQDCmin,fQDCmax);
+	TH1D *zPosALL = new TH1D("zPosALL","zPos All Bars",fNumZPosbins,fZPosmin,fZPosmax);
 
 	for (i=0;i<fNumBars;i++) 
 	{
@@ -69,6 +92,9 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 		histObj = "qdcBar" + sbar.str();
 		histTitle = "QDC Bar " + sbar.str();
 		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+		histObj = "zPosBar" + sbar.str();
+		histTitle = "zPos Bar " + sbar.str();
+		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumZPosbins,fZPosmin,fZPosmax);
 		histObj = "qdc" + sch1.str();
 		histTitle = "QDC Channel " + sch1.str();
 		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
@@ -78,9 +104,14 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 
 	}
 	
-//fill bar histos
+//fill histos
 
 	int ch[2];
+	double q1;
+	double q2;
+
+
+	SetInvAttCoeff();
 
 
 	for (i=0;i<numEntries;i++)
@@ -101,6 +132,15 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 			ch[1] = ch[0] + 1;
 			fHistPtr->Fill(qdc->at(ch[0]) + qdc->at(ch[1]));
 			qdcALL->Fill(qdc->at(ch[0]) + qdc->at(ch[1]));
+			histObj = "zPosBar" + sbar.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			if ((qdc->at(ch[0])!=0) && (qdc->at(ch[1])!=0))
+			{
+				q1 = (double)qdc->at(ch[0]);
+				q2 = (double)qdc->at(ch[1]);
+				fHistPtr->Fill(InvAttCoeff[j]*log(q1/q2));
+				zPosALL->Fill(InvAttCoeff[j]*log(q1/q2));
+			}			
 			histObj = "qdc" + sch1.str();
 			f->GetObject(histObj.c_str(),fHistPtr);
 			fHistPtr->Fill(qdc->at(j));
@@ -162,7 +202,7 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 
 	}
 	
-//fill bar histos
+//fill histos
 	for (i=0;i<numEntries;i++)
 	{
 		tTDC->GetEntry(i);
@@ -206,7 +246,7 @@ void HistoMaker::DeleteHistos(TFile* f){
 
 	int i;
 	
-//qdc
+//qdc,zpos
 	for (i=0;i<fNumBars;i++)
 	{
 		std::stringstream sbar;
@@ -224,9 +264,14 @@ void HistoMaker::DeleteHistos(TFile* f){
 		histObj = "qdc" + sch2.str();
 		f->GetObject(histObj.c_str(),fHistPtr);
 		delete fHistPtr;
+		histObj = "qdc" + sbar.str();
+		f->GetObject(histObj.c_str(),fHistPtr);
+		delete fHistPtr;
 	}		
 
 	f->GetObject("qdcALL",fHistPtr);
+	delete fHistPtr;
+	f->GetObject("zPosALL",fHistPtr);
 	delete fHistPtr;
 
 //tdc

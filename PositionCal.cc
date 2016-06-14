@@ -36,6 +36,8 @@ void PositionCal::Calibrate(TTree* t,TFile* f){
 	int i;
 	int j;
 	int ch[2];
+	double q1;
+	double q2;
 
 	for (i=0;i<numEntries;i++)
 	{
@@ -49,8 +51,10 @@ void PositionCal::Calibrate(TTree* t,TFile* f){
 
 			if ((qdc->at(ch[0]) != 0) && (qdc->at(ch[1]) != 0))
 			{
-				q1overq2 = (qdc->at(ch[0]))/(qdc->at(ch[1]));
-				logratios[j][i] = q1overq2;
+				q1 = (double)qdc->at(ch[0]);
+				q2 = (double)qdc->at(ch[1]);
+				q1overq2 = q1/q2;
+				logratios[j][i] = log(q1overq2);
 			}		
 			else logratios[j][i] = 0;
 		}
