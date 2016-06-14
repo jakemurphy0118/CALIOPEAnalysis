@@ -80,6 +80,7 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 	
 	TH1D *qdcALL = new TH1D("qdcALL","QDC All Bars",fNumQDCbins,fQDCmin,fQDCmax);
 	TH1D *zPosALL = new TH1D("zPosALL","zPos All Bars",fNumZPosbins,fZPosmin,fZPosmax);
+	TH2D *energyVSzpos = new TH2D("energyVSzpos","energy vs zpos",fNumZPosbins,fZPosmin,fZPosmax,fNumQDCbins,fQDCmin,fQDCmax);
 
 	for (i=0;i<fNumBars;i++) 
 	{
@@ -140,6 +141,7 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 				q2 = (double)qdc->at(ch[1]);
 				fHistPtr->Fill(InvAttCoeff[j]*log(q1/q2));
 				zPosALL->Fill(InvAttCoeff[j]*log(q1/q2));
+				energyVSzpos->Fill(InvAttCoeff[j]*log(q1/q2),q1+q2);
 			}			
 			histObj = "qdc" + sch1.str();
 			f->GetObject(histObj.c_str(),fHistPtr);
@@ -272,6 +274,8 @@ void HistoMaker::DeleteHistos(TFile* f){
 	f->GetObject("qdcALL",fHistPtr);
 	delete fHistPtr;
 	f->GetObject("zPosALL",fHistPtr);
+	delete fHistPtr;
+	f->GetObject("energyVSzpos",fHistPtr);
 	delete fHistPtr;
 
 //tdc
