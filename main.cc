@@ -49,6 +49,13 @@ int main(int argc, char** argv){
 
 	fout->Write();
 	energycalibration.DeleteBarHistos(fout);
+	
+//for run with the collimator, get 1/mu for each bar
+
+	//PositionCal positioncalibration;
+	//std::vector<double> *invattcoeff = 0;
+	
+	//invattcoeff = positioncalibration.Calibrate(tQDC,fout);
 
 	
 return 0;
