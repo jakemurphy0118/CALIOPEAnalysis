@@ -4,7 +4,7 @@
 PositionCal::PositionCal(){}
 PositionCal::~PositionCal(){}
 
-std::vector<double> * PositionCal::Calibrate(TTree* t,TFile* f){
+void PositionCal::Calibrate(TTree* t,TFile* f){
 
 //branch addressing
 	Int_t runNumber2;
@@ -35,6 +35,7 @@ std::vector<double> * PositionCal::Calibrate(TTree* t,TFile* f){
 	double q1overq2;
 	int i;
 	int j;
+	int ch[2];
 
 	for (i=0;i<numEntries;i++)
 	{
@@ -43,7 +44,8 @@ std::vector<double> * PositionCal::Calibrate(TTree* t,TFile* f){
 		for (j=0;j<16;j++)
 		{
 
-			int *ch = GetChannelsForBar(j+1);
+			ch[0] = (j+1) + (j+1) - 2;
+			ch[1] = ch[0] + 1;
 
 			if ((qdc->at(ch[0]) != 0) && (qdc->at(ch[1]) != 0))
 			{
@@ -54,10 +56,6 @@ std::vector<double> * PositionCal::Calibrate(TTree* t,TFile* f){
 		}
 		
 	}
-
-
-	std::vector<double> *invattcoeff = 0;
-	return invattcoeff;
 
 
 }
