@@ -10,10 +10,15 @@ EnergyCal::EnergyCal(){
 	fNumQDCbins = 100;
 	fQDCmin = 0;
 	fQDCmax = 200;
-	fNumChannels = 16;
+	histObj = "";
+	histTitle = "";
 }
 
 EnergyCal::~EnergyCal(){};
+
+
+
+
 
 std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
 
@@ -21,7 +26,7 @@ std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
 
 	std::vector<double> *scalingFactors = 0;
 //for peak finding (TSpectrum)
-	Int_t npeaks = 4;
+	Int_t npeaks = 3;
 	float sigma = 5;
 	float threshold = 0.05;
 /*	double PeakEnergies[npeaks];
@@ -38,13 +43,10 @@ std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
 
 	for (i=0;i<fNumBars;i++)
 	{	
-		std::stringstream ss;
-		ss << i+1;
-		std::string bar = ss.str();
-		std::string histObj = "qdcBar";
-		histObj = histObj + bar;
-		const char *Obj = histObj.c_str();
-		f->GetObject(Obj,fHistPtr);
+		std::stringstream sbar;
+		sbar << i+1;
+		histObj = "qdcBar" + sbar.str();
+		f->GetObject(histObj.c_str(),fHistPtr);
 
 		TSpectrum *spectrum = new TSpectrum(npeaks);
 		Int_t nfound = spectrum->Search(fHistPtr,sigma,"",threshold);
@@ -52,7 +54,7 @@ std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
 
 		for (j=0;j<nfound;j++)
 		{
-			std::cout << "xposition: " << xpeaks[j] << " found for bar " << bar << std::endl;			
+			std::cout << "xposition: " << xpeaks[j] << " found for bar " << sbar.str() << std::endl;			
 		}
 	}
 	
@@ -60,6 +62,10 @@ std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
 
 	return scalingFactors;
 }
+
+
+
+
 
 void EnergyCal::MakeBarHistos(TTree* t,TFile *f){
 
@@ -89,19 +95,27 @@ void EnergyCal::MakeBarHistos(TTree* t,TFile *f){
 	int j;
 
 	long numEntries = t->GetEntries();
+	
+	TH1D *qdcALL = new TH1D("qdcALL","QDC All Channels",fNumQDCbins,fQDCmin,fQDCmax);
 
 	for (i=0;i<fNumBars;i++) 
 	{
-		std::stringstream ss;
-		ss << i+1;
-		std::string bar = ss.str();
-		std::string histObj = "qdcBar";
-		std::string histTitle = "QDC Bar ";
-		histObj = histObj + bar;
-		histTitle = histTitle + bar;
-		const char *Obj = histObj.c_str();
-		const char *Title = histTitle.c_str();
-		fHistPtr = new TH1D(Obj,Title,fNumQDCbins,fQDCmin,fQDCmax);
+		std::stringstream sbar;
+		std::stringstream sch1;
+		std::stringstream sch2;
+		sbar << i+1;
+		sch1 << i;
+		sch2 << i+16;
+		histObj = "qdcBar" + sbar.str();
+		histTitle = "QDC Bar " + sbar.str();
+		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+		histObj = "qdc" + sch1.str();
+		histTitle = "QDC Channel " + sch1.str();
+		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+		histObj = "qdc" + sch2.str();
+		histTitle = "QDC Channel " + sch2.str();
+		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+
 	}
 	
 //fill bar histos
@@ -111,36 +125,57 @@ void EnergyCal::MakeBarHistos(TTree* t,TFile *f){
 
 		for (j=0;j<fNumBars;j++)
 		{
-			std::stringstream ss;
-			ss << j+1;
-			std::string bar = ss.str();
-			std::string histObj = "qdcBar";
-			histObj = histObj + bar;
-			const char *Obj = histObj.c_str();
-			f->GetObject(Obj,fHistPtr);
+			std::stringstream sbar;
+			std::stringstream sch1;
+			std::stringstream sch2;
+			sbar << j+1;
+			sch1 << j;
+			sch2 << j+16;
+			histObj = "qdcBar" + sbar.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
 			int * ch = GetChannelsForBar(j+1);
 			fHistPtr->Fill(qdc->at(ch[0]));
-			fHistPtr->Fill(qdc->at(ch[1]));			
+			fHistPtr->Fill(qdc->at(ch[1]));
+			histObj = "qdc" + sch1.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			fHistPtr->Fill(qdc->at(j));
+			histObj = "qdc" + sch2.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			fHistPtr->Fill(qdc->at(j+16));
+			qdcALL->Fill(qdc->at(j));
+			qdcALL->Fill(qdc->at(j+16));			
 		}
 				
 	}
 }
 
 
+
+
+
+
 void EnergyCal::DeleteBarHistos(TFile *f){
 //delete histos
 
 	int i;
+	
 
 	for (i=0;i<fNumBars;i++)
 	{
-		std::stringstream ss;
-		ss << i+1;
-		std::string bar = ss.str();
-		std::string histObj = "qdcBar";
-		histObj = histObj + bar;
-		const char *Obj = histObj.c_str();
-		f->GetObject(Obj,fHistPtr);
+		std::stringstream sbar;
+		std::stringstream sch1;
+		std::stringstream sch2;
+		sbar << i+1;
+		sch1 << i;
+		sch2 << i+16;
+		histObj = "qdcBar" + sbar.str();
+		f->GetObject(histObj.c_str(),fHistPtr);
+		delete fHistPtr;
+		histObj = "qdc" + sch1.str();
+		f->GetObject(histObj.c_str(),fHistPtr);
+		delete fHistPtr;
+		histObj = "qdc" + sch2.str();
+		f->GetObject(histObj.c_str(),fHistPtr);
 		delete fHistPtr;
 	}		
 

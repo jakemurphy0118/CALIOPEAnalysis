@@ -1,21 +1,18 @@
-#ifndef ENERGYCAL_H
-#define ENERGYCAL_H
+#ifndef POSITIONCAL_H
+#define POSITIONCAL_H
 
 #include <TTree.h>
 #include <TFile.h>
-#include <TH1D.h>
-#include <iostream>
 #include <string>
+#include <sstream>
+#include <TH1D.h>
 
-class EnergyCal
-{
+class PositionCal{
 
-public:
-	EnergyCal();
-	~EnergyCal();
+public: 
+	PositionCal();
+	~PositionCal();
 	std::vector<double> * Calibrate(TTree*,TFile*);
-	void MakeBarHistos(TTree*,TFile*);
-	void DeleteBarHistos(TFile*);
 //returns array of left-pmt channel number then right-pmt channel number
 	int * GetChannelsForBar(int bar){
 		int ch[2];
@@ -23,17 +20,15 @@ public:
 		ch[1] = ch[0] + 1;
 		return ch;
 	}
+
+
 private:
 
 	int fNumBars;
-	int fNumQDCbins;
-	int fQDCmax;
-	int fQDCmin;
 	int fNumChannels;
-	TH1D *fHistPtr;
-	std::string histObj;
-	std::string histTitle;
-	
+
 };
 
+
 #endif
+

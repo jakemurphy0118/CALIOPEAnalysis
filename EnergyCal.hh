@@ -5,6 +5,7 @@
 #include <TFile.h>
 #include <TH1D.h>
 #include <iostream>
+#include <string>
 
 class EnergyCal
 {
@@ -28,8 +29,9 @@ private:
 	int fNumQDCbins;
 	int fQDCmax;
 	int fQDCmin;
-	int fNumChannels;
 	TH1D *fHistPtr;
+	std::string histObj;
+	std::string histTitle;
 	
 };
 
