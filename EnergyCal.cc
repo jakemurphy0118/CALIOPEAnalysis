@@ -61,6 +61,7 @@ void EnergyCal::Calibrate(TTree* t, TFile* f){
 	}
 */	
 //finds peaks for all qdc data combined
+//use findpeak.cc in CALIOPEAnalysis/RunFiles/ to test for correct parameters, etc 
 
 	f->GetObject("qdcALL",fHistPtr);
 	TSpectrum *spectrum = new TSpectrum(10);
@@ -192,5 +193,7 @@ void EnergyCal::DeleteBarHistos(TFile *f){
 		delete fHistPtr;
 	}		
 
+	f->GetObject("qdcALL",fHistPtr);
+	delete fHistPtr;
 
 }

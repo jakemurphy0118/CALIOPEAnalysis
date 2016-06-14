@@ -6,6 +6,7 @@
 #include <TSpectrum.h>
 
 
+
 int main(int argc, char** argv){
 
 std::string file = argv[1];
@@ -13,6 +14,7 @@ TFile fin(file.c_str());
 TH1F* fHistPtr;
 fin.GetObject("energySpec",fHistPtr);
 int i;
+
 
 	Int_t npeaks = 2;
 	float sigma = 10;
@@ -28,7 +30,12 @@ int i;
 	}
 
 
-
+TFile fout("peaktest.root","recreate");
+TH1F* h = (TH1F*)fHistPtr->Clone("h");
+TH1 *background = spectrum->Background(h,20,"");
+TH1F *h2 = (TH1F*)h->Clone("h2");
+h2->Add(background,-1);
+fout.Write();
 
 
 
@@ -37,3 +44,5 @@ int i;
 
 return 0;
 }
+
+
