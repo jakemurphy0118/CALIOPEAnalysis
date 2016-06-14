@@ -41,14 +41,20 @@ int main(int argc, char** argv){
 	const char *histos = outputFile1.c_str();
 	TFile* fout = new TFile(histos,"recreate");
 
-//energy calibration, return scaling factors for each bar
-	
+//energy cal
+
 	EnergyCal energycalibration;
-	std::vector<double> *energyScalingFactors = 0;
-	energyScalingFactors = energycalibration.Calibrate(tQDC,fout);
+
+//use calibrate for finding xpositions/bins of the 511 and 1022 peaks
+//use makebarhistos if finding the above info is not needed
+	energycalibration.Calibrate(tQDC,fout);
+//	energycalibratoin.MakeBarHistos(tQDC,fout);
 
 	fout->Write();
 	energycalibration.DeleteBarHistos(fout);
+
+
+
 	
 //for run with the collimator, get 1/mu for each bar
 
