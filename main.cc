@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "EnergyCal.hh"
+#include "PositionCal.hh"
+#include "HistoMaker.hh"
 
 
 int main(int argc, char** argv){
@@ -41,27 +43,28 @@ int main(int argc, char** argv){
 	const char *histos = outputFile1.c_str();
 	TFile* fout = new TFile(histos,"recreate");
 
-//energy cal
 
+
+
+
+
+
+	HistoMaker histomaker;
 	EnergyCal energycalibration;
+	PositionCal positioncalibration;
 
-//use calibrate for finding xpositions/bins of the 511 and 1022 peaks
-//use makebarhistos if finding the above info is not needed
+	histomaker.MakeHistos(tTDC,tQDC,fout);
+	
 	energycalibration.Calibrate(tQDC,fout);
-//	energycalibratoin.MakeBarHistos(tQDC,fout);
+	positioncalibration.Calibrate(tQDC,fout);
+
+	
+
 
 	fout->Write();
-	energycalibration.DeleteBarHistos(fout);
+	histomaker.DeleteHistos(fout);
 
 
-
-	
-//for run with the collimator, get 1/mu for each bar
-
-	//PositionCal positioncalibration;
-	//std::vector<double> *invattcoeff = 0;
-	
-	//invattcoeff = positioncalibration.Calibrate(tQDC,fout);
 
 	
 return 0;
