@@ -13,7 +13,7 @@ class EnergyCal
 public:
 	EnergyCal();
 	~EnergyCal();
-	std::vector<double> * Calibrate(TTree*,TFile*);
+	void Calibrate(TTree*,TFile*);
 	void MakeBarHistos(TTree*,TFile*);
 	void DeleteBarHistos(TFile*);
 //returns array of left-pmt channel number then right-pmt channel number

@@ -20,26 +20,28 @@ EnergyCal::~EnergyCal(){};
 
 
 
-std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
+void EnergyCal::Calibrate(TTree* t, TFile* f){
 
 	MakeBarHistos(t,f);
 
-	std::vector<double> *scalingFactors = 0;
+
 //for peak finding (TSpectrum)
-	Int_t npeaks = 3;
+	Int_t npeaks = 2;
 	float sigma = 5;
 	float threshold = 0.05;
-/*	double PeakEnergies[npeaks];
+	double PeakEnergies[2];
 //assigned in increasing order of energy
 	PeakEnergies[0] = 511;	//annihilation
 	PeakEnergies[1] = 1022; //double
-	PeakEnergies[2] = 1274; //gamma?
-*/	
+
+	
 
 
 
 	int i;
 	int j;
+/*
+//finds peak for each bar
 
 	for (i=0;i<fNumBars;i++)
 	{	
@@ -57,10 +59,21 @@ std::vector<double> * EnergyCal::Calibrate(TTree* t, TFile* f){
 			std::cout << "xposition: " << xpeaks[j] << " found for bar " << sbar.str() << std::endl;			
 		}
 	}
+*/	
+//finds peaks for all qdc data combined
+
+	f->GetObject("qdcALL",fHistPtr);
+	TSpectrum *spectrum = new TSpectrum(10);
+	Int_t nfound = spectrum->Search(fHistPtr,sigma,"nodraw",threshold);
+	Float_t *xpeaks = spectrum->GetPositionX();
 	
+	for (i=0;i<nfound;i++)
+	{
+		std::cout << "num peaks (nfound): " << nfound << std::endl;
+		std::cout << "peak found at xposition: " << xpeaks[i] << " in bin: " << fHistPtr->GetXaxis()->FindBin(xpeaks[i]) << std::endl; 
+	}
 
 
-	return scalingFactors;
 }
 
 
