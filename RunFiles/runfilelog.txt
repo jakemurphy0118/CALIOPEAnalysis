@@ -1,0 +1,3 @@
+Run841: 60s, old qdc (ch22), tdc (ch14)
+Run892: 60s,  pulser in ch1, tdc, qdc (ch1-7)
+
