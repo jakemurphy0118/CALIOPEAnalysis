@@ -8,11 +8,11 @@
 HistoMaker::HistoMaker(){
 
 	fNumBars = 16;
-	fNumQDCbins = 100;
+	fNumQDCbins = 200;
 	fQDCmin = 0;
-	fQDCmax = 400;
-	fNumTDCbins = 100;
-	fTDCmax = 500;
+	fQDCmax = 700;
+	fNumTDCbins = 200;
+	fTDCmax = 700;
 	fTDCmin = 0;
 	fNumZPosbins = 100;
 	fZPosmax = 3;
