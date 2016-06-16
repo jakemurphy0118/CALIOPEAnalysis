@@ -18,6 +18,7 @@ public:
 	void MakeHistos(TTree*,TTree*,TFile*);
 	void DeleteHistos(TFile*);
 	void SetInvAttCoeff();
+	void SetOppositeBars();
 
 private:
 	int fNumBars;
@@ -36,7 +37,9 @@ private:
 	std::string histObj;
 	std::string histTitle;
 //inverse attenuation coefficients
-	double InvAttCoeff[16];
+	double InvAttCoeff[24];
+//input: bar#-1, output: opposite bar#
+	double OppositeBar[24];
 
 };
 

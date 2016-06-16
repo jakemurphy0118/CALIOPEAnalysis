@@ -42,6 +42,44 @@ void HistoMaker::SetInvAttCoeff(){
 	InvAttCoeff[13] = 1;
 	InvAttCoeff[14] = 1;
 	InvAttCoeff[15] = 1;
+	InvAttCoeff[16] = 1;
+	InvAttCoeff[17] = 1;
+	InvAttCoeff[18] = 1;
+	InvAttCoeff[19] = 1;
+	InvAttCoeff[20] = 1;
+	InvAttCoeff[21] = 1;
+	InvAttCoeff[22] = 1;
+	InvAttCoeff[23] = 1;
+
+}
+
+void HistoMaker::SetOppositeBars(){
+//input: bar#-1, output: opp bar#
+//example: oppositebar[0] = 5 tells you the opposite bar of bar 1 is bar 5
+	OppositeBar[0] = 5;
+	OppositeBar[1] = 6;
+	OppositeBar[2] = 7;
+	OppositeBar[3] = 24;
+	OppositeBar[4] = 1;
+	OppositeBar[5] = 2;
+	OppositeBar[6] = 3;
+	OppositeBar[7] = 9;
+	OppositeBar[8] = 8;
+	OppositeBar[9] = 17;
+	OppositeBar[10] = 18;
+	OppositeBar[11] = 19;
+	OppositeBar[12] = 20;
+	OppositeBar[13] = 21;
+	OppositeBar[14] = 22;
+	OppositeBar[15] = 23;
+	OppositeBar[16] = 10;
+	OppositeBar[17] = 11;
+	OppositeBar[18] = 12;
+	OppositeBar[19] = 13;
+	OppositeBar[20] = 14;
+	OppositeBar[21] = 15;
+	OppositeBar[22] = 16;
+	OppositeBar[23] = 4;
 
 }
 
@@ -77,10 +115,14 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 
 
 	long numEntries = tQDC->GetEntries();
+
 	
 	TH1D *qdcALL = new TH1D("qdcALL","QDC All Bars",fNumQDCbins,fQDCmin,fQDCmax);
 	TH1D *zPosALL = new TH1D("zPosALL","zPos All Bars",fNumZPosbins,fZPosmin,fZPosmax);
 	TH2D *energyVSzpos = new TH2D("energyVSzpos","energy vs zpos",fNumZPosbins,fZPosmin,fZPosmax,fNumQDCbins,fQDCmin,fQDCmax);
+	TH1D *numBarsHit = new TH1D("numBarsHit","Total Number of Bars Hit Per Event",24,0,24);
+	TH1D *whichBarsHit = new TH1D("whichBarsHit","Number of times each bar was hit per Run",24,0,24);
+	TH1D *qdcOppBarEvents = new TH1D("qdcOppBarEvents","Fill if event had opposite bars hit",fNumQDCbins,fQDCmin,fQDCmax);
 
 	for (i=0;i<fNumBars;i++) 
 	{
@@ -110,14 +152,19 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 	int ch[2];
 	double q1;
 	double q2;
+	int barsHit;
+	UInt_t barHitThresh = 0;
+	int wasHit[24] = {0};
 
 
 	SetInvAttCoeff();
+	SetOppositeBars();
 
 
 	for (i=0;i<numEntries;i++)
 	{
 		tQDC->GetEntry(i);
+		barsHit = 0;
 
 		for (j=0;j<fNumBars;j++)
 		{
@@ -131,14 +178,15 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 			f->GetObject(histObj.c_str(),fHistPtr);
 			ch[0] = (j+1) + (j+1) - 2;
 			ch[1] = ch[0] + 1;
-			fHistPtr->Fill(qdc->at(ch[0]) + qdc->at(ch[1]));
-			qdcALL->Fill(qdc->at(ch[0]) + qdc->at(ch[1]));
+			q1 = (double)qdc->at(ch[0]);
+			q2 = (double)qdc->at(ch[1]);
+			fHistPtr->Fill(q1 + q2);
+			qdcALL->Fill(q1 + q2);
 			histObj = "zPosBar" + sbar.str();
 			f->GetObject(histObj.c_str(),fHistPtr);
-			if ((qdc->at(ch[0])!=0) && (qdc->at(ch[1])!=0))
+			if ((q1!=0) && (q2!=0))
 			{
-				q1 = (double)qdc->at(ch[0]);
-				q2 = (double)qdc->at(ch[1]);
+
 				fHistPtr->Fill(InvAttCoeff[j]*log(q1/q2));
 				zPosALL->Fill(InvAttCoeff[j]*log(q1/q2));
 				energyVSzpos->Fill(InvAttCoeff[j]*log(q1/q2),q1+q2);
@@ -148,8 +196,35 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 			fHistPtr->Fill(qdc->at(j));
 			histObj = "qdc" + sch2.str();
 			f->GetObject(histObj.c_str(),fHistPtr);
-			fHistPtr->Fill(qdc->at(j+16));			
+			fHistPtr->Fill(qdc->at(j+16));		
+		//numbars hit/which ones
+			wasHit[j] = 0;
+			if ( (q1 > barHitThresh) && (q2 > barHitThresh) )
+			{
+				barsHit++;
+				whichBarsHit->Fill(j);
+				wasHit[j] = 1;
+			}
+				
 		}
+	
+		numBarsHit->Fill(barsHit);
+	//2 bar events (must be opposite)
+		if (barsHit == 2) 
+		{
+			for (j=0;j<16;j++) 
+			{
+				int oppbar = OppositeBar[j];
+				if ( (wasHit[j]==1) && (wasHit[oppbar-1]==1) )
+				{
+					ch[0] = (j+1) + (j+1) - 2;
+					ch[1] = ch[0] + 1;
+					qdcOppBarEvents->Fill( qdc->at(ch[0]) + qdc->at(ch[1]) );
+					break;
+				}
+			}
+		}	
+		
 				
 	}
 
@@ -277,7 +352,12 @@ void HistoMaker::DeleteHistos(TFile* f){
 	delete fHistPtr;
 	f->GetObject("energyVSzpos",fHistPtr);
 	delete fHistPtr;
-
+	f->GetObject("numBarsHit",fHistPtr);
+	delete fHistPtr;
+	f->GetObject("whichBarsHit",fHistPtr);
+	delete fHistPtr;
+	f->GetObject("qdcOppBarEvents",fHistPtr);
+	delete fHistPtr;
 //tdc
 
 	for (i=0;i<fNumBars;i++)
