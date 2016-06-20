@@ -39,7 +39,7 @@ private:
 //inverse attenuation coefficients
 	double InvAttCoeff[24];
 //input: bar#-1, output: opposite bar#
-	double OppositeBar[24];
+	int OppositeBar[24];
 
 };
 
