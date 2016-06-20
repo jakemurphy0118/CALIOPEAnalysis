@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include "EventBuilder.hh"
 
 
 HistoMaker::HistoMaker(){
@@ -146,15 +147,84 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
 
 	}
-	
-//fill histos
+//fill histos(integrating EventBuilder)
 
+	SetInvAttCoeff();
+	SetOppositeBars();
+	int channel;
+	int currentbar;
+	int numHitBars;
+	int wasHit[24] = {0};
+	UInt_t barHitThreshold = 0;
+	double qL;
+	double qR;
+	double q;
+	double zPos;
+	bool oppBarEvent;
+
+	for (i=0;i<numEntries;i++)
+	{
+		EventBuilder *eb = new EventBuilder();
+		tQDC->GetEntry(i);
+		numHitBars = eb->NumOfHitBars(qdc,barHitThreshold);
+		eb->WhichBars(qdc,wasHit,barHitThreshold);
+		oppBarEvent = eb->WasOppBarEvent(qdc,OppositeBar,wasHit);
+		qL = 0;
+		qR = 0;
+		q = 0;
+		zPos = 0;
+		currentbar = 0;
+
+		for (j=0;j<16;j++)
+		{
+			currentbar = j+1;
+			qL = eb->GetLeftCharge(qdc,currentbar);
+			qR = eb->GetRightCharge(qdc,currentbar);
+			q = qL + qR;
+			zPos = eb->ZRecon(qdc,InvAttCoeff[j],currentbar);	
+
+			std::stringstream sbar;
+			sbar << j+1;
+			std::stringstream schL;
+			schL << 2*(j+1) - 2;
+			std::stringstream schR;
+			schR << 2*(j+1) - 1;
+
+			histObj = "qdcBar" + sbar.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			fHistPtr->Fill(q);
+			qdcALL->Fill(q);
+			if (oppBarEvent) {qdcOppBarEvents->Fill(q);}			
+
+			histObj = "qdc" + schL.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			fHistPtr->Fill(qL);
+			
+			histObj = "qdc" + schR.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			fHistPtr->Fill(qR);
+
+			histObj = "zPosBar" + sbar.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			fHistPtr->Fill(zPos);
+			zPosALL->Fill(zPos);
+			energyVSzpos->Fill(zPos,q);	
+				
+		}
+		
+		numBarsHit->Fill(numHitBars);
+		for (j=0;j<fNumBars;j++) { if (wasHit[j] == 1) { whichBarsHit->Fill(j+1); } }		
+
+		delete eb;
+	}
+//fill histos
+/*
 	int ch[2];
 	double q1;
 	double q2;
 	int barsHit;
 	UInt_t barHitThresh = 0;
-	int wasHit[24] = {0};
+	//int wasHit[24] = {0};
 
 
 	SetInvAttCoeff();
@@ -228,7 +298,7 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 				
 	}
 
-
+*/
 //END QDC tree access--------------------------------------------------------------------------------
 
 
@@ -280,6 +350,7 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 	}
 	
 //fill histos
+	int ch[2];
 	for (i=0;i<numEntries;i++)
 	{
 		tTDC->GetEntry(i);
