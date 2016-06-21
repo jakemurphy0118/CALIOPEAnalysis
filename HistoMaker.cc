@@ -111,13 +111,6 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 
 //create histograms
 
-	int i;
-	int j;
-
-
-	long numEntries = tQDC->GetEntries();
-
-	
 	TH1D *qdcALL = new TH1D("qdcALL","QDC All Bars",fNumQDCbins,fQDCmin,fQDCmax);
 	TH1D *zPosALL = new TH1D("zPosALL","zPos All Bars",fNumZPosbins,fZPosmin,fZPosmax);
 	TH2D *energyVSzpos = new TH2D("energyVSzpos","energy vs zpos",fNumZPosbins,fZPosmin,fZPosmax,fNumQDCbins,fQDCmin,fQDCmax);
@@ -161,6 +154,9 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 	double q;
 	double zPos;
 	bool oppBarEvent;
+	long numEntries = tQDC->GetEntries();
+	int i;
+	int j;
 
 	for (i=0;i<numEntries;i++)
 	{

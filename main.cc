@@ -31,16 +31,14 @@ int main(int argc, char** argv){
 //deal with output file
 
 	std::string outputFile;
-	std::string outputFile1;
-	
 	if( inputFile.find(".") < inputFile.length() ) {
         	if( inputFile.substr(inputFile.find_last_of(".")) == ".root" ) {
             		outputFile = inputFile.substr(0, inputFile.find_last_of(".") );
-			outputFile1 = outputFile + "Histos.root";
+			outputFile = outputFile + "Histos.root";
         	}
     	}
 	
-	const char *histos = outputFile1.c_str();
+	const char *histos = outputFile.c_str();
 	TFile* fout = new TFile(histos,"recreate");
 
 
