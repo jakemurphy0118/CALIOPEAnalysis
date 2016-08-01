@@ -4,11 +4,14 @@
 #include <vector>
 #include <cmath>
 #include "EventBuilder.hh"
+#include <algorithm>
 
 
 HistoMaker::HistoMaker(){
 
-	fNumBars = 16;
+
+	std::cout << "HistoMaker constructor" << std::endl;
+	fNumBars = 24;
 	fNumQDCbins = 200;
 	fQDCmin = 0;
 	fQDCmax = 700;
@@ -20,6 +23,15 @@ HistoMaker::HistoMaker(){
 	fZPosmin = -3;
 	histObj = "";
 	histTitle = "";
+
+	qdcTree1 = true;//bars 1-8
+	qdcTree2 = false;//bars 9-16
+	qdcTree3 = false;//bars 17-24
+
+	tdcTree1 = true;//1-8
+	tdcTree2 = false;//9-16
+	tdcTree3 = false;//17-24
+
 }
 
 
@@ -84,30 +96,82 @@ void HistoMaker::SetOppositeBars(){
 
 }
 
+void HistoMaker::FillTH1D(TFile *f,std::string histo,double val){
 
-void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
+	f->GetObject(histo.c_str(),fHistPtr);
+	fHistPtr->Fill(val);
+
+}
+
+void HistoMaker::FillTH2D(TFile *f,std::string histo,double valx,double valy){
+	
+	f->GetObject(histo.c_str(),fHistPtr);
+	fHistPtr->Fill(valx,valy);
+}
+
+
+void HistoMaker::MakeHistos(TTree* tTDC1,TTree* tTDC2,TTree* tTDC3,TTree* tQDC1,TTree* tQDC2,TTree* tQDC3,TFile *f){
 
 
 //QDC tree access--------------------------------------------------------------------------
+	int i;
+	int j;
 
 //branch addressing
-	Int_t runNumber2;
-	UInt_t crate2;
-	UInt_t card2;
-	UInt_t eventCount2;
-	UInt_t nValues2;
-	std::vector<UInt_t> *qdc = 0;
-	std::vector<UInt_t> *qdcUnder = 0;
-	std::vector<UInt_t> *qdcOverflow = 0;
-
-	tQDC->SetBranchAddress("runNumber",&runNumber2);
-	tQDC->SetBranchAddress("crate",&crate2);
-	tQDC->SetBranchAddress("card",&card2);
-	tQDC->SetBranchAddress("eventCount",&eventCount2);
-	tQDC->SetBranchAddress("nValues",&nValues2);
-	tQDC->SetBranchAddress("qdc",&qdc);
-	tQDC->SetBranchAddress("isUnderThresh",&qdcUnder);
-	tQDC->SetBranchAddress("isOverflow",&qdcOverflow);
+	Int_t runNumberQ1;
+	UInt_t crateQ1;
+	UInt_t cardQ1;
+	UInt_t eventCountQ1;
+	UInt_t nValuesQ1;
+	std::vector<UInt_t> *qdc1 = 0;
+	std::vector<UInt_t> *qdcUnder1 = 0;
+	std::vector<UInt_t> *qdcOverflow1 = 0;
+	if (qdcTree1){
+		tQDC1->SetBranchAddress("runNumber",&runNumberQ1);
+		tQDC1->SetBranchAddress("crate",&crateQ1);
+		tQDC1->SetBranchAddress("card",&cardQ1);
+		tQDC1->SetBranchAddress("eventCount",&eventCountQ1);
+		tQDC1->SetBranchAddress("nValues",&nValuesQ1);
+		tQDC1->SetBranchAddress("qdc",&qdc1);
+		tQDC1->SetBranchAddress("isUnderThresh",&qdcUnder1);
+		tQDC1->SetBranchAddress("isOverflow",&qdcOverflow1);
+	}
+	Int_t runNumberQ2;
+	UInt_t crateQ2;
+	UInt_t cardQ2;
+	UInt_t eventCountQ2;
+	UInt_t nValuesQ2;
+	std::vector<UInt_t> *qdc2 = 0;
+	std::vector<UInt_t> *qdcUnder2 = 0;
+	std::vector<UInt_t> *qdcOverflow2 = 0;
+	if (qdcTree2){
+		tQDC2->SetBranchAddress("runNumber",&runNumberQ2);
+		tQDC2->SetBranchAddress("crate",&crateQ2);
+		tQDC2->SetBranchAddress("card",&cardQ2);
+		tQDC2->SetBranchAddress("eventCount",&eventCountQ2);
+		tQDC2->SetBranchAddress("nValues",&nValuesQ2);
+		tQDC2->SetBranchAddress("qdc",&qdc2);
+		tQDC2->SetBranchAddress("isUnderThresh",&qdcUnder2);
+		tQDC2->SetBranchAddress("isOverflow",&qdcOverflow2);
+	}
+	Int_t runNumberQ3;
+	UInt_t crateQ3;
+	UInt_t cardQ3;
+	UInt_t eventCountQ3;
+	UInt_t nValuesQ3;
+	std::vector<UInt_t> *qdc3 = 0;
+	std::vector<UInt_t> *qdcUnder3 = 0;
+	std::vector<UInt_t> *qdcOverflow3 = 0;
+	if (qdcTree3){
+		tQDC3->SetBranchAddress("runNumber",&runNumberQ3);
+		tQDC3->SetBranchAddress("crate",&crateQ3);
+		tQDC3->SetBranchAddress("card",&cardQ3);
+		tQDC3->SetBranchAddress("eventCount",&eventCountQ3);
+		tQDC3->SetBranchAddress("nValues",&nValuesQ3);
+		tQDC3->SetBranchAddress("qdc",&qdc3);
+		tQDC3->SetBranchAddress("isUnderThresh",&qdcUnder3);
+		tQDC3->SetBranchAddress("isOverflow",&qdcOverflow3);
+	}
 
 //create histograms
 
@@ -124,20 +188,43 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 		std::stringstream sch1;
 		std::stringstream sch2;
 		sbar << i+1;
-		sch1 << i;
-		sch2 << i+16;
 		histObj = "qdcBar" + sbar.str();
 		histTitle = "QDC Bar " + sbar.str();
 		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
 		histObj = "zPosBar" + sbar.str();
 		histTitle = "zPos Bar " + sbar.str();
 		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumZPosbins,fZPosmin,fZPosmax);
-		histObj = "qdc" + sch1.str();
-		histTitle = "QDC Channel " + sch1.str();
-		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
-		histObj = "qdc" + sch2.str();
-		histTitle = "QDC Channel " + sch2.str();
-		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+		if (i < 8 && qdcTree1) {
+			sch1 << 2*(i%8);
+			sch2 << 2*(i%8)+1;
+			histObj = "qdc1CH" + sch1.str();
+			histTitle = "QDC1 Channel " + sch1.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+			histObj = "qdc1CH" + sch2.str();
+			histTitle = "QDC1 Channel " + sch2.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+		}
+		if (i >= 8 && i < 16 && qdcTree2){
+			sch1 << 2*(i%8);
+			sch2 << 2*(i%8)+1;
+			histObj = "qdc2CH" + sch1.str();
+			histTitle = "QDC2 Channel " + sch1.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+			histObj = "qdc2CH" + sch2.str();
+			histTitle = "QDC2 Channel " + sch2.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+			
+		}
+		if (i >= 16 && qdcTree3){
+			sch1 << 2*(i%8);
+			sch2 << 2*(i%8)+1;
+			histObj = "qdc3CH" + sch1.str();
+			histTitle = "QDC3 Channel " + sch1.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);
+			histObj = "qdc3CH" + sch2.str();
+			histTitle = "QDC3 Channel " + sch2.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumQDCbins,fQDCmin,fQDCmax);		
+		}
 
 	}
 //fill histos(integrating EventBuilder)
@@ -147,69 +234,103 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 	int channel;
 	int currentbar;
 	int numHitBars;
-	int wasHit[24] = {0};
-	UInt_t barHitThreshold = 0;
+	double barHitThreshold = 0;
 	double qL;
 	double qR;
 	double q;
+	double Econst = 1;
 	double zPos;
 	bool oppBarEvent;
-	long numEntries = tQDC->GetEntries();
-	int i;
-	int j;
+	long numEntriesQDC1, numEntriesQDC2, numEntriesQDC3, maxEntriesQDC;
+	if (qdcTree1) { numEntriesQDC1 = tQDC1->GetEntries(); maxEntriesQDC = numEntriesQDC1;} else { numEntriesQDC1 = 0;}
+	if (qdcTree2) { numEntriesQDC2 = tQDC2->GetEntries(); if (numEntriesQDC2 > maxEntriesQDC){maxEntriesQDC = numEntriesQDC2;}} else { numEntriesQDC2 = 0;}
+	if (qdcTree3) { numEntriesQDC3 = tQDC3->GetEntries(); if (numEntriesQDC3 > maxEntriesQDC){maxEntriesQDC = numEntriesQDC3;}} else { numEntriesQDC3 = 0;}
+	std::cout << "QDC entries: " << maxEntriesQDC << std::endl;
 
-	for (i=0;i<numEntries;i++)
+	for (i=0;i<maxEntriesQDC;i++)
 	{
+		if (i%10000 == 0) {std::cout << "entry " << i << std::endl;}
 		EventBuilder *eb = new EventBuilder();
-		tQDC->GetEntry(i);
-		numHitBars = eb->NumOfHitBars(qdc,barHitThreshold);
-		eb->WhichBars(qdc,wasHit,barHitThreshold);
-		oppBarEvent = eb->WasOppBarEvent(qdc,OppositeBar,wasHit);
-		qL = 0;
-		qR = 0;
-		q = 0;
-		zPos = 0;
+		bool qdcTree1InRange = false;
+		bool qdcTree2InRange = false;
+		bool qdcTree3InRange = false;
+		if (qdcTree1 && i < numEntriesQDC1){tQDC1->GetEntry(i); qdcTree1InRange = true;}
+		if (qdcTree2 && i < numEntriesQDC2){tQDC2->GetEntry(i); qdcTree2InRange = true;}
+		if (qdcTree3 && i < numEntriesQDC3){tQDC3->GetEntry(i); qdcTree3InRange = true;}
+
+		numHitBars = 0;
+		oppBarEvent = false;
+		int wasHit[24] = {0};
+
+		//oppBarEvent = eb->WasOppBarEvent(qdc,OppositeBar,wasHit);
 		currentbar = 0;
 
-		for (j=0;j<16;j++)
-		{
-			currentbar = j+1;
-			qL = eb->GetLeftCharge(qdc,currentbar);
-			qR = eb->GetRightCharge(qdc,currentbar);
-			q = qL + qR;
-			zPos = eb->ZRecon(qdc,InvAttCoeff[j],currentbar);	
+		for (j=0;j<fNumBars;j++){
 
-			std::stringstream sbar;
+			qL = 0;
+			qR = 0;
+			q = 0;
+			zPos = 0;
+		
+			currentbar = j;
+			std::stringstream schL, schR, sbar;
 			sbar << j+1;
-			std::stringstream schL;
-			schL << 2*(j+1) - 2;
-			std::stringstream schR;
-			schR << 2*(j+1) - 1;
+			schL << 2*(currentbar%8);
+			schR << 2*(currentbar%8)+1;
+
+			if (j < 8 && qdcTree1InRange){
+
+				qL = eb->GetLeftCharge(qdc1,currentbar);
+				qR = eb->GetRightCharge(qdc1,currentbar);
+				zPos = eb->ZRecon(qdc1,InvAttCoeff[j],currentbar);
+				q = Econst * std::sqrt(qL*qR);
+
+				histObj = "qdc1CH" + schL.str();
+				FillTH1D(f,histObj,qL);
+				histObj = "qdc1CH" + schR.str();
+				FillTH1D(f,histObj,qR);	
+			}
+			if (j >=8 && j < 16 && qdcTree2InRange){
+				qL = eb->GetLeftCharge(qdc2,currentbar);
+				qR = eb->GetRightCharge(qdc3,currentbar);
+				zPos = eb->ZRecon(qdc2,InvAttCoeff[j],currentbar);
+				q = Econst * std::sqrt(qL*qR);
+
+				histObj = "qdc2CH" + schL.str();
+				FillTH1D(f,histObj,qL);
+				histObj = "qdc2CH" + schR.str();
+				FillTH1D(f,histObj,qR);
+
+			}
+			if (j >= 16 && qdcTree3InRange){
+				qL = eb->GetLeftCharge(qdc3,currentbar);
+				qR = eb->GetRightCharge(qdc3,currentbar);
+				zPos = eb->ZRecon(qdc3,InvAttCoeff[j],currentbar);	
+				q = Econst * std::sqrt(qL*qR);	
+
+				histObj = "qdc3CH" + schL.str();
+				FillTH1D(f,histObj,qL);
+				histObj = "qdc3CH" + schR.str();
+				FillTH1D(f,histObj,qR);
+
+			}
+	
+			if (q > barHitThreshold){whichBarsHit->Fill(currentbar); numHitBars++; wasHit[j] = 1;}
 
 			histObj = "qdcBar" + sbar.str();
-			f->GetObject(histObj.c_str(),fHistPtr);
-			fHistPtr->Fill(q);
+			FillTH1D(f,histObj,q);
 			qdcALL->Fill(q);
 			if (oppBarEvent) {qdcOppBarEvents->Fill(q);}			
-
-			histObj = "qdc" + schL.str();
-			f->GetObject(histObj.c_str(),fHistPtr);
-			fHistPtr->Fill(qL);
-			
-			histObj = "qdc" + schR.str();
-			f->GetObject(histObj.c_str(),fHistPtr);
-			fHistPtr->Fill(qR);
-
+		//zposition reconstruction
 			histObj = "zPosBar" + sbar.str();
-			f->GetObject(histObj.c_str(),fHistPtr);
-			fHistPtr->Fill(zPos);
+			FillTH1D(f,histObj,zPos);
 			zPosALL->Fill(zPos);
+		//charge in bar vs zpos
 			energyVSzpos->Fill(zPos,q);	
 				
 		}
-		
+	
 		numBarsHit->Fill(numHitBars);
-		for (j=0;j<fNumBars;j++) { if (wasHit[j] == 1) { whichBarsHit->Fill(j+1); } }		
 
 		delete eb;
 	}
@@ -301,27 +422,64 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 //TDC tree access------------------------------------------------------------------------------------
 
 //branch addressing
-	Int_t runNumber;
-	UInt_t crate;
-	UInt_t card;
-	UInt_t eventCount;
-	UInt_t nValues;
-	std::vector<UInt_t> *tdc = 0;
-	std::vector<UInt_t> *tdcUnder = 0;
-	std::vector<UInt_t> *tdcOverflow = 0;
-
-	tTDC->SetBranchAddress("runNumber",&runNumber);
-	tTDC->SetBranchAddress("crate",&crate);
-	tTDC->SetBranchAddress("card",&card);
-	tTDC->SetBranchAddress("eventCount",&eventCount);
-	tTDC->SetBranchAddress("nValues",&nValues);
-	tTDC->SetBranchAddress("tdc",&tdc);
-	tTDC->SetBranchAddress("isUnderThresh",&tdcUnder);
-	tTDC->SetBranchAddress("isOverflow",&tdcOverflow);
-
+	Int_t runNumberT1;
+	UInt_t crateT1;
+	UInt_t cardT1;
+	UInt_t eventCountT1;
+	UInt_t nValuesT1;
+	std::vector<UInt_t> *tdc1 = 0;
+	std::vector<UInt_t> *tdcUnder1 = 0;
+	std::vector<UInt_t> *tdcOverflow1 = 0;
+	if (tdcTree1){
+		tTDC1->SetBranchAddress("runNumber",&runNumberT1);
+		tTDC1->SetBranchAddress("crate",&crateT1);
+		tTDC1->SetBranchAddress("card",&cardT1);
+		tTDC1->SetBranchAddress("eventCount",&eventCountT1);
+		tTDC1->SetBranchAddress("nValues",&nValuesT1);
+		tTDC1->SetBranchAddress("tdc",&tdc1);
+		tTDC1->SetBranchAddress("isUnderThresh",&tdcUnder1);
+		tTDC1->SetBranchAddress("isOverflow",&tdcOverflow1);
+	}
+	Int_t runNumberT2;
+	UInt_t crateT2;
+	UInt_t cardT2;
+	UInt_t eventCountT2;
+	UInt_t nValuesT2;
+	std::vector<UInt_t> *tdc2 = 0;
+	std::vector<UInt_t> *tdcUnder2 = 0;
+	std::vector<UInt_t> *tdcOverflow2 = 0;
+	if (tdcTree2){
+		tTDC2->SetBranchAddress("runNumber",&runNumberT2);
+		tTDC2->SetBranchAddress("crate",&crateT2);
+		tTDC2->SetBranchAddress("card",&cardT2);
+		tTDC2->SetBranchAddress("eventCount",&eventCountT2);
+		tTDC2->SetBranchAddress("nValues",&nValuesT2);
+		tTDC2->SetBranchAddress("tdc",&tdc2);
+		tTDC2->SetBranchAddress("isUnderThresh",&tdcUnder2);
+		tTDC2->SetBranchAddress("isOverflow",&tdcOverflow2);
+	}
+	Int_t runNumberT3;
+	UInt_t crateT3;
+	UInt_t cardT3;
+	UInt_t eventCountT3;
+	UInt_t nValuesT3;
+	std::vector<UInt_t> *tdc3 = 0;
+	std::vector<UInt_t> *tdcUnder3 = 0;
+	std::vector<UInt_t> *tdcOverflow3 = 0;
+	if (tdcTree3){
+		tTDC3->SetBranchAddress("runNumber",&runNumberT3);
+		tTDC3->SetBranchAddress("crate",&crateT3);
+		tTDC3->SetBranchAddress("card",&cardT3);
+		tTDC3->SetBranchAddress("eventCount",&eventCountT3);
+		tTDC3->SetBranchAddress("nValues",&nValuesT3);
+		tTDC3->SetBranchAddress("tdc",&tdc3);
+		tTDC3->SetBranchAddress("isUnderThresh",&tdcUnder3);
+		tTDC3->SetBranchAddress("isOverflow",&tdcOverflow3);
+	}
+	
 //create histograms
 
-	numEntries = tTDC->GetEntries();
+
 	
 	TH1D *tdcALL = new TH1D("tdcALL","TDC All Channels",fNumTDCbins,fTDCmin,fTDCmax);
 
@@ -331,50 +489,116 @@ void HistoMaker::MakeHistos(TTree* tTDC,TTree* tQDC,TFile *f){
 		std::stringstream sch1;
 		std::stringstream sch2;
 		sbar << i+1;
-		sch1 << i;
-		sch2 << i+16;
 		histObj = "tdcBar" + sbar.str();
 		histTitle = "TDC Bar " + sbar.str();
 		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
-		histObj = "tdc" + sch1.str();
-		histTitle = "TDC Channel " + sch1.str();
-		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
-		histObj = "tdc" + sch2.str();
-		histTitle = "TDC Channel " + sch2.str();
-		fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
+		if (i < 8 && tdcTree1){
+			sch1 << 2*(i%8);
+			sch2 << 2*(i%8)+1;
+			histObj = "tdc1CH" + sch1.str();
+			histTitle = "TDC1 Channel " + sch1.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
+			histObj = "tdc1CH" + sch2.str();
+			histTitle = "TDC1 Channel " + sch2.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
+		}
+		if (i >= 8 && i < 16 && tdcTree2){
+			sch1 << 2*(i%8);
+			sch2 << 2*(i%8)+1;
+			histObj = "tdc2CH" + sch1.str();
+			histTitle = "TDC2 Channel " + sch1.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
+			histObj = "tdc2CH" + sch2.str();
+			histTitle = "TDC2 Channel " + sch2.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
+		}
+		if (i >= 16 && tdcTree3){
+			sch1 << 2*(i%8);
+			sch2 << 2*(i%8)+1;
+			histObj = "tdc3CH" + sch1.str();
+			histTitle = "TDC3 Channel " + sch1.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
+			histObj = "tdc3CH" + sch2.str();
+			histTitle = "TDC3 Channel " + sch2.str();
+			fHistPtr = new TH1D(histObj.c_str(),histTitle.c_str(),fNumTDCbins,fTDCmin,fTDCmax);
+		}
 
 	}
 	
 //fill histos
-	int ch[2];
-	for (i=0;i<numEntries;i++)
-	{
-		tTDC->GetEntry(i);
+
+	long numEntriesTDC1, numEntriesTDC2, numEntriesTDC3, maxEntriesTDC;
+	if (tdcTree1){ numEntriesTDC1 = tTDC1->GetEntries(); maxEntriesTDC = numEntriesTDC1;} else {numEntriesTDC1 = 0;}
+	if (tdcTree2){ numEntriesTDC2 = tTDC2->GetEntries(); if (numEntriesTDC2 > maxEntriesTDC){ maxEntriesTDC = numEntriesTDC2;}} else {numEntriesTDC2 = 0;}
+	if (tdcTree3){ numEntriesTDC3 = tTDC3->GetEntries(); if (numEntriesTDC3 > maxEntriesTDC){ maxEntriesTDC = numEntriesTDC3;}} else {numEntriesTDC3 = 0;}
+	std::cout << "TDC entries " << maxEntriesTDC << std::endl;
+
+	double tL, tR, t;
+
+	for (i=0;i<maxEntriesTDC;i++){
+
+		if (i%10000 == 0) {std::cout << "entry " << i << std::endl;}
+
+		bool tdcTree1InRange = false;
+		bool tdcTree2InRange = false;
+		bool tdcTree3InRange = false;
+
+		if (tdcTree1 && i < numEntriesTDC1){tdcTree1InRange = true; tTDC1->GetEntry(i);}
+		if (tdcTree2 && i < numEntriesTDC2){tdcTree2InRange = true; tTDC2->GetEntry(i);}
+		if (tdcTree3 && i < numEntriesTDC3){tdcTree3InRange = true; tTDC3->GetEntry(i);}
+
+		EventBuilder* eb = new EventBuilder();
 
 		for (j=0;j<fNumBars;j++)
 		{
+			tL = 0;
+			tR = 0;
+			t = 0;
 			std::stringstream sbar;
 			std::stringstream sch1;
 			std::stringstream sch2;
 			sbar << j+1;
-			sch1 << j;
-			sch2 << j+16;
-			histObj = "tdcBar" + sbar.str();
-			f->GetObject(histObj.c_str(),fHistPtr);
-			ch[0] = (j+1) + (j+1) - 2;
-			ch[1] = ch[0] + 1;
-			fHistPtr->Fill(tdc->at(ch[0]));
-			fHistPtr->Fill(tdc->at(ch[1]));
-			histObj = "tdc" + sch1.str();
-			f->GetObject(histObj.c_str(),fHistPtr);
-			fHistPtr->Fill(tdc->at(j));
-			histObj = "tdc" + sch2.str();
-			f->GetObject(histObj.c_str(),fHistPtr);
-			fHistPtr->Fill(tdc->at(j+16));
-			tdcALL->Fill(tdc->at(j));
-			tdcALL->Fill(tdc->at(j+16));			
+			sch1 << 2*(currentbar%8);
+			sch2 << 2*(currentbar%8)+1;
+			currentbar = j;
+
+			if (j < 8 && tdcTree1InRange){
+				tL = eb->GetLeftTDCVal(tdc1,currentbar);
+				tR = eb->GetRightTDCVal(tdc1,currentbar);
+				t = tL + tR;
+				histObj = "tdc1CH" + sch1.str();
+				FillTH1D(f,histObj,tL);
+				histObj = "tdc1CH" + sch2.str();
+				FillTH1D(f,histObj,tR);
+				histObj = "tdcBar" + sbar.str();
+				FillTH1D(f,histObj,t);											
+			}
+			if (j >= 8 && j < 16 && tdcTree2InRange){
+				tL = eb->GetLeftTDCVal(tdc2,currentbar);
+				tR = eb->GetRightTDCVal(tdc2,currentbar);
+				t = tL + tR;
+				histObj = "tdc2CH" + sch1.str();
+				FillTH1D(f,histObj,tL);
+				histObj = "tdc2CH" + sch2.str();
+				FillTH1D(f,histObj,tR);
+				histObj = "tdcBar" + sbar.str();
+				FillTH1D(f,histObj,t);											
+			}
+			if (j >= 16 && tdcTree3InRange){
+				tL = eb->GetLeftTDCVal(tdc3,currentbar);
+				tR = eb->GetRightTDCVal(tdc3,currentbar);
+				t = tL + tR;
+				histObj = "tdc3CH" + sch1.str();
+				FillTH1D(f,histObj,tL);
+				histObj = "tdc3CH" + sch2.str();
+				FillTH1D(f,histObj,tR);
+				histObj = "tdcBar" + sbar.str();
+				FillTH1D(f,histObj,t);											
+			}
+			
 		}
-				
+		
+		delete eb;		
 	}
 
 }
@@ -394,23 +618,40 @@ void HistoMaker::DeleteHistos(TFile* f){
 	for (i=0;i<fNumBars;i++)
 	{
 		std::stringstream sbar;
-		std::stringstream sch1;
-		std::stringstream sch2;
+		std::stringstream schL;
+		std::stringstream schR;
 		sbar << i+1;
-		sch1 << i;
-		sch2 << i+16;
 		histObj = "qdcBar" + sbar.str();
 		f->GetObject(histObj.c_str(),fHistPtr);
 		delete fHistPtr;
-		histObj = "qdc" + sch1.str();
-		f->GetObject(histObj.c_str(),fHistPtr);
-		delete fHistPtr;
-		histObj = "qdc" + sch2.str();
-		f->GetObject(histObj.c_str(),fHistPtr);
-		delete fHistPtr;
-		histObj = "qdc" + sbar.str();
-		f->GetObject(histObj.c_str(),fHistPtr);
-		delete fHistPtr;
+		if (i < 8 && qdcTree1){
+			schL << 2*((i+1)%8)-2;
+			schR << 2*((i+1)%8)-1;
+			histObj = "qdc1CH" + schL.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			delete fHistPtr;
+			histObj = "qdc1CH" + schR.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+		}
+		if (i >= 8 && i < 16 && qdcTree2){
+			schL << 2*((i+1)%8)-2;
+			schR << 2*((i+1)%8)-1;
+			histObj = "qdc2CH" + schL.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			delete fHistPtr;
+			histObj = "qdc2CH" + schR.str();
+			f->GetObject(histObj.c_str(),fHistPtr);			
+		}
+		if (i >= 16 && qdcTree3){
+			schL << 2*((i+1)%8)-2;
+			schR << 2*((i+1)%8)-1;
+			histObj = "qdc3CH" + schL.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			delete fHistPtr;
+			histObj = "qdc3CH" + schR.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+		}
+
 	}		
 
 	f->GetObject("qdcALL",fHistPtr);
@@ -427,23 +668,43 @@ void HistoMaker::DeleteHistos(TFile* f){
 	delete fHistPtr;
 //tdc
 
-	for (i=0;i<fNumBars;i++)
-	{
+	for (i=0;i<fNumBars;i++){
+
 		std::stringstream sbar;
-		std::stringstream sch1;
-		std::stringstream sch2;
+		std::stringstream schL;
+		std::stringstream schR;
 		sbar << i+1;
-		sch1 << i;
-		sch2 << i+16;
 		histObj = "tdcBar" + sbar.str();
 		f->GetObject(histObj.c_str(),fHistPtr);
 		delete fHistPtr;
-		histObj = "tdc" + sch1.str();
-		f->GetObject(histObj.c_str(),fHistPtr);
-		delete fHistPtr;
-		histObj = "tdc" + sch2.str();
-		f->GetObject(histObj.c_str(),fHistPtr);
-		delete fHistPtr;
+		if (i < 8 && tdcTree1){
+			schL << 2*((i+1)%8)-2;
+			schR << 2*((i+1)%8)-1;
+			histObj = "tdc1CH" + schL.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			delete fHistPtr;
+			histObj = "tdc1CH" + schR.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+		}
+		if (i >= 8 && i < 16 && tdcTree2){
+			schL << 2*((i+1)%8)-2;
+			schR << 2*((i+1)%8)-1;
+			histObj = "tdc2CH" + schL.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			delete fHistPtr;
+			histObj = "tdc2CH" + schR.str();
+			f->GetObject(histObj.c_str(),fHistPtr);			
+		}
+		if (i >= 16 && tdcTree3){
+			schL << 2*((i+1)%8)-2;
+			schR << 2*((i+1)%8)-1;
+			histObj = "tdc3CH" + schL.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+			delete fHistPtr;
+			histObj = "tdc3CH" + schR.str();
+			f->GetObject(histObj.c_str(),fHistPtr);
+		}
+
 	}		
 
 	f->GetObject("tdcALL",fHistPtr);

@@ -23,10 +23,14 @@ int main(int argc, char** argv){
 
 //get trees from root file
 
-	TTree *tTDC;
-	TTree *tQDC; 
-	fin.GetObject("treeName",tTDC);
-	fin.GetObject("treeName_2",tQDC);
+	TTree* tTDC1;
+	TTree* tTDC2;
+	TTree* tTDC3;
+	TTree* tQDC1;
+	TTree* tQDC2;
+	TTree* tQDC3; 
+	fin.GetObject("treeName",tTDC1);
+	fin.GetObject("treeName_2",tQDC1);
 
 //deal with output file
 
@@ -48,10 +52,10 @@ int main(int argc, char** argv){
 
 
 	HistoMaker histomaker;
-	EnergyCal energycalibration;
-	PositionCal positioncalibration;
+	//EnergyCal energycalibration;
+	//PositionCal positioncalibration;
 
-	histomaker.MakeHistos(tTDC,tQDC,fout);
+	histomaker.MakeHistos(tTDC1,tTDC2,tTDC3,tQDC1,tQDC2,tQDC3,fout);
 	
 	//energycalibration.Calibrate(tQDC,fout);
 	//positioncalibration.Calibrate(tQDC,fout);
